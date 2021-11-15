@@ -156,7 +156,7 @@ class Test_CKey(unittest.TestCase):
 
     def test_schnorr(self) -> None:
         if not bitcointx.util._allow_secp256k1_experimental_modules:
-            return
+            self.skipTest("secp256k1 experimental modules are not available")
         # adapted from reference code of BIP340
         # at https://github.com/bitcoin/bips/blob/master/bip-0340/reference.py
         with open(os.path.dirname(__file__) + '/data/schnorr-sig-test-vectors.csv', 'r') as fd:
