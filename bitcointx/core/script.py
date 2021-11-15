@@ -1457,11 +1457,15 @@ def SignatureHashSchnorr(
     if inIdx >= len(txTo.vin):
         raise ValueError(f'inIdx {inIdx} out of range ({len(txTo.vin)})')
 
-    if tapleaf_hash is not None and len(tapleaf_hash) != 32:
-        raise ValueError('tapleaf_hash must be exactly 32 bytes long')
+    if tapleaf_hash is not None:
+        ensure_isinstance(tapleaf_hash, bytes, 'tapleaf_hash')
+        if len(tapleaf_hash) != 32:
+            raise ValueError('tapleaf_hash must be exactly 32 bytes long')
 
-    if annex_hash is not None and len(annex_hash) != 32:
-        raise ValueError('tapleaf_hash must be exactly 32 bytes long')
+    if annex_hash is not None:
+        ensure_isinstance(annex_hash, bytes, 'annex_hash')
+        if len(annex_hash) != 32:
+            raise ValueError('annex_hash must be exactly 32 bytes long')
 
     if sigversion == SIGVERSION_TAPROOT:
         ext_flag = 0
