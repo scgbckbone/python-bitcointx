@@ -327,8 +327,10 @@ class CKeyBase:
                 _experimental_module_unavailable_error(
                     'schnorr signature', 'schnorrsig'))
 
-        if aux is not None and len(aux) != 32:
-            raise ValueError('aux must be exactly 32 bytes long')
+        if aux is not None:
+            ensure_isinstance(aux, (bytes, bytearray), 'aux')
+            if len(aux) != 32:
+                raise ValueError('aux must be exactly 32 bytes long')
 
         keypair_buf = ctypes.create_string_buffer(96)
 
