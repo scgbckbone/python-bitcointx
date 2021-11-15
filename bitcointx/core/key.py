@@ -2088,6 +2088,9 @@ class XOnlyPubKey(bytes):
                 _experimental_module_unavailable_error(
                     'schnorr signature', 'schnorrsig'))
 
+        ensure_isinstance(sigbytes, (bytes, bytearray), 'signature')
+        ensure_isinstance(hash, (bytes, bytearray), 'hash')
+
         if len(hash) != 32:
             raise ValueError('Hash must be exactly 32 bytes long')
 
