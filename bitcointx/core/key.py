@@ -341,13 +341,13 @@ class CKeyBase:
             assert(result == 0)
             raise RuntimeError('secp256k1_keypair_create returned failure')
 
+        pubkey_buf = ctypes.create_string_buffer(64)
+
         if merkle_root is not NO_MERKLE_ROOT_TWEAK:
             if not isinstance(merkle_root, bytes):
                 raise TypeError(
                     'merkle_root must be a bytes instance, '
                     'or the special value NO_MERKLE_ROOT_TWEAK')
-
-            pubkey_buf = ctypes.create_string_buffer(64)
 
             result = _secp256k1.secp256k1_keypair_xonly_pub(
                 secp256k1_context_sign, pubkey_buf, None, keypair_buf)
@@ -389,6 +389,27 @@ class CKeyBase:
         if 1 != result:
             assert(result == 0)
             raise RuntimeError('secp256k1_schnorrsig_sign returned failure')
+
+        # The pubkey may be tweaked, so extract it from keypair
+        # to do verification after signing
+        result = _secp256k1.secp256k1_keypair_xonly_pub(
+            secp256k1_context_sign, pubkey_buf, None, keypair_buf)
+
+        if 1 != result:
+            assert(result == 0)
+            raise RuntimeError('secp256k1_keypair_xonly_pub returned failure')
+
+        # This check is not in Bitcoin Core's `CKey::SignSchnorr`, but
+        # is recommended in BIP340 if the computation cost is not a concern
+        result = _secp256k1.secp256k1_schnorrsig_verify(
+            secp256k1_context_verify,
+            sig_buf.raw, hash, 32, pubkey_buf
+        )
+
+        if result != 1:
+            assert result == 0
+            raise RuntimeError(
+                'secp256k1_schnorrsig_verify failed after signing')
 
         # There's no C compiler that can optimize out the 'superfluous' memset,
         # so we don't need special memory_cleanse() function.
