@@ -73,7 +73,7 @@ class KeyDerivationFailException(RuntimeError):
     pass
 
 
-def _experimental_module_unavailable_error(msg, module_name):
+def _experimental_module_unavailable_error(msg: str, module_name: str) -> str:
     return (
         f'{msg} handling functions from libsecp256k1 is not available. '
         f'You should use newer version of secp256k1 library, '
