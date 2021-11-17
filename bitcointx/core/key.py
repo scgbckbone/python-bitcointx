@@ -332,7 +332,8 @@ class CKeyBase:
             if len(aux) != 32:
                 raise ValueError('aux must be exactly 32 bytes long')
 
-        keypair_buf = ctypes.create_string_buffer(96)
+        sizeof_keypair = 96
+        keypair_buf = ctypes.create_string_buffer(sizeof_keypair)
 
         result = _secp256k1.secp256k1_keypair_create(
             secp256k1_context_sign, keypair_buf, self)
@@ -416,7 +417,7 @@ class CKeyBase:
         # Not that it matters much in python where we don't have control over
         # memory and the keydata is probably spread all over the place anyway,
         # but still, do this to be close to the original source
-        ctypes.memset(keypair_buf, 0, 64)
+        ctypes.memset(keypair_buf, 0, sizeof_keypair)
 
         return sig_buf.raw
 
