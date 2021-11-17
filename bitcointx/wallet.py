@@ -498,7 +498,8 @@ class P2TRCoinAddress(CBech32CoinAddress, next_dispatch_final=True):
         *,
         accept_invalid: bool = False
     ) -> T_P2TRCoinAddress:
-        """Create a P2TR address from x-only output pubkey
+        """Create a P2TR address from x-only pubkey that is already tweaked,
+        the "output pubkey" in the terms of BIP341
 
         Raises CCoinAddressError if pubkey is invalid, unless accept_invalid
         is True.
@@ -518,7 +519,7 @@ class P2TRCoinAddress(CBech32CoinAddress, next_dispatch_final=True):
         cls: Type[T_P2TRCoinAddress],
         pubkey: Union[XOnlyPubKey, bytes, bytearray]
     ) -> T_P2TRCoinAddress:
-        """Create a P2TR address from x-only internal pubkey
+        """Create a P2TR address from x-only "internal" pubkey (in BIP341 terms)
 
         Raises CCoinAddressError if pubkey is invalid
         """
@@ -544,12 +545,19 @@ class P2TRCoinAddress(CBech32CoinAddress, next_dispatch_final=True):
                            pubkey: Union[CPubKey, bytes, bytearray],
                            *,
                            accept_invalid: bool = False) -> T_P2TRCoinAddress:
-        """Create a P2TR address from a pubkey
+        """Create a P2TR address from a pubkey that is already tweaked,
+        the "output pubkey" in the terms of BIP341
 
         Raises CCoinAddressError if pubkey is invalid, unless accept_invalid
         is True.
         """
-        ensure_isinstance(pubkey, (CPubKey, bytes, bytearray), 'pubkey')
+        ensure_isinstance(pubkey, (XOnlyPubKey, CPubKey, bytes, bytearray),
+                          'pubkey')
+
+        if len(pubkey) == 32:
+            if not isinstance(pubkey, CPubKey):  # might be invalid CPubKey
+                return cls.from_xonly_output_pubkey(
+                    pubkey, accept_invalid=accept_invalid)
 
         if not accept_invalid:
             if not isinstance(pubkey, CPubKey):
@@ -565,18 +573,25 @@ class P2TRCoinAddress(CBech32CoinAddress, next_dispatch_final=True):
 
     @classmethod
     def from_pubkey(cls: Type[T_P2TRCoinAddress],
-                    pubkey: Union[CPubKey, bytes, bytearray],
+                    pubkey: Union[XOnlyPubKey, CPubKey, bytes, bytearray],
                     ) -> T_P2TRCoinAddress:
-        """Create a P2TR address from (internal) pubkey
+        """Create a P2TR address from "internal" pubkey (in BIP341 terms)
 
         Raises CCoinAddressError if pubkey is invalid
         """
-        ensure_isinstance(pubkey, (CPubKey, bytes, bytearray), 'pubkey')
+        ensure_isinstance(pubkey, (XOnlyPubKey, CPubKey, bytes, bytearray),
+                          'pubkey')
 
         if not isinstance(pubkey, CPubKey):
+
+            if len(pubkey) == 32:
+                return cls.from_xonly_pubkey(pubkey)
+
             pubkey = CPubKey(pubkey)
+
         if not pubkey.is_fullyvalid():
             raise P2TRCoinAddressError('invalid pubkey')
+
         if not pubkey.is_compressed():
             raise P2TRCoinAddressError(
                 'Uncompressed pubkeys are not allowed')

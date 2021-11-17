@@ -348,7 +348,7 @@ class Test_CBitcoinAddress(unittest.TestCase):
             if len(pubkey) == 32:
                 if not bitcointx.util._allow_secp256k1_experimental_modules:
                     return
-                addr = cls.from_xonly_output_pubkey(pubkey)
+                addr = cls.from_output_pubkey(pubkey)
             else:
                 if accept_uncompressed:
                     assert len(pubkey) == 65
@@ -692,7 +692,7 @@ class Test_BIP341_standard_vectors(unittest.TestCase):
                 adr = P2TRCoinAddress.from_script_tree(stree)
             else:
                 merkle_root = b''
-                adr = P2TRCoinAddress.from_xonly_pubkey(int_pub)
+                adr = P2TRCoinAddress.from_pubkey(int_pub)
 
             if intermediary['merkleRoot']:
                 self.assertEqual(merkle_root.hex(), intermediary['merkleRoot'])
