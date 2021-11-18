@@ -39,7 +39,7 @@ from bitcointx.core.script import (
     TaprootScriptTreeLeaf_Type
 )
 from bitcointx.core.key import (
-    CPubKey, XOnlyPubKey, CKey, compute_tap_tweak_hash
+    CPubKey, XOnlyPubKey, compute_tap_tweak_hash
 )
 from bitcointx.wallet import (
     CCoinAddressError as CBitcoinAddressError,
@@ -57,7 +57,7 @@ from bitcointx.wallet import (
     P2WPKHBitcoinAddress,
     P2WSHBitcoinAddress,
     P2TRBitcoinAddress,
-    CBitcoinKey,
+    CBitcoinKey, CCoinKey
 )
 
 
@@ -737,7 +737,7 @@ class Test_BIP341_standard_vectors(unittest.TestCase):
                 expected = inp_tcase['expected']
                 in_idx = given['txinIndex']
                 signed_inputs.add(in_idx)
-                k = CKey(x(given['internalPrivkey']))
+                k = CCoinKey.from_secret_bytes(x(given['internalPrivkey']))
 
                 self.assertEqual(k.xonly_pub.hex(),
                                  intermediary['internalPubkey'])
@@ -766,7 +766,7 @@ class Test_BIP341_standard_vectors(unittest.TestCase):
 
                 self.assertEqual(sh.hex(), intermediary['sigHash'])
 
-                sig = k.sign_schnorr(sh, merkle_root=mr)
+                sig = k.sign_schnorr_tweaked(sh, merkle_root=mr)
                 if ht:
                     wstack = [(sig + bytes([ht]))]
                 else:

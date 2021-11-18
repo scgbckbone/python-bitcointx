@@ -44,7 +44,7 @@ from bitcointx.core.bitcoinconsensus import (
     ConsensusVerifyScript, BITCOINCONSENSUS_ACCEPTED_FLAGS,
     load_bitcoinconsensus_library
 )
-from bitcointx.wallet import P2TRCoinAddress
+from bitcointx.wallet import P2TRCoinAddress, CCoinKey
 
 TestDataIterator = Iterator[
     Tuple[CScript, CScript, CScript, CScriptWitness, int,
@@ -167,7 +167,7 @@ class Test_EvalScript(unittest.TestCase):
     # interface, so this should not be changed into something that just
     # loads data from a json file.
     def generate_taproot_test_scripts(self) -> TestDataIterator:
-        k = CKey.from_secret_bytes(os.urandom(32))
+        k = CCoinKey.from_secret_bytes(os.urandom(32))
 
         xopub = k.xonly_pub
 
@@ -176,7 +176,7 @@ class Test_EvalScript(unittest.TestCase):
         (txCredit, txSpend) = self.create_test_txs(
             CScript(), spk, spk, CScriptWitness(), nValue)
         sh = SignatureHashSchnorr(txSpend, 0, txCredit.vout)
-        sig = k.sign_schnorr(sh)
+        sig = k.sign_schnorr_tweaked(sh)
         yield (CScript(), spk, spk, CScriptWitness([sig]), nValue,
                txCredit.vout, BITCOINCONSENSUS_ACCEPTED_FLAGS,
                'OK', '', 'simple taproot spend')
@@ -198,7 +198,7 @@ class Test_EvalScript(unittest.TestCase):
         (txCredit, txSpend) = self.create_test_txs(
             CScript(), spk, spk, CScriptWitness(), nValue)
         sh = s.sighash_schnorr(txSpend, 0, txCredit.vout)
-        sig = k.sign_schnorr(sh, merkle_root=random_tweak)
+        sig = k.sign_schnorr_tweaked(sh, merkle_root=random_tweak)
 
         yield (CScript(), spk, spk, CScriptWitness([sig, s, cb]), nValue,
                txCredit.vout, BITCOINCONSENSUS_ACCEPTED_FLAGS,
@@ -234,7 +234,7 @@ class Test_EvalScript(unittest.TestCase):
                 (txCredit, txSpend) = self.create_test_txs(
                     CScript(), spk, spk, CScriptWitness(), nValue)
                 sh = s.sighash_schnorr(txSpend, 0, txCredit.vout)
-                sig = k.sign_schnorr(sh, merkle_root=tweak)
+                sig = k.sign_schnorr_tweaked(sh, merkle_root=tweak)
 
                 yield (CScript(), spk, spk, CScriptWitness([sig, s, cb]), nValue,
                        txCredit.vout, BITCOINCONSENSUS_ACCEPTED_FLAGS,

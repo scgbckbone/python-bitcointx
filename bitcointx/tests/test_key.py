@@ -19,7 +19,7 @@ import hashlib
 
 import bitcointx.util
 
-from bitcointx.core.key import CKey, CPubKey, XOnlyPubKey, NO_MERKLE_ROOT_TWEAK
+from bitcointx.core.key import CKey, CPubKey, XOnlyPubKey
 from bitcointx.core import x
 from bitcointx.core.secp256k1 import secp256k1_has_pubkey_negate
 
@@ -180,8 +180,8 @@ class Test_CKey(unittest.TestCase):
                     pubkey_actual = seckey.xonly_pub
                     self.assertEqual(pubkey, pubkey_actual)
                     aux_rand = x(aux_rand_hex)
-                    sig_actual = seckey.sign_schnorr(
-                        msg, aux=aux_rand, merkle_root=NO_MERKLE_ROOT_TWEAK)
+                    sig_actual = seckey.sign_schnorr_no_tweak(
+                        msg, aux=aux_rand)
                     self.assertEqual(sig, sig_actual)
                 if pubkey.is_fullyvalid():
                     result_actual = pubkey.verify_schnorr(msg, sig)

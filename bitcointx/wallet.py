@@ -827,6 +827,15 @@ class CCoinKey(CBase58DataDispatched, CKeyBase,
             return self
         return self.__class__.from_secret_bytes(self[:32], False)
 
+    def sign_schnorr_tweaked(
+        self, hash: Union[bytes, bytearray],
+        *,
+        merkle_root: bytes = b'',
+        aux: Optional[bytes] = None
+    ) -> bytes:
+        return self._sign_schnorr_internal(
+            hash, merkle_root=merkle_root, aux=aux)
+
 
 class CBitcoinKey(CCoinKey, WalletBitcoinClass):
     base58_prefix = bytes([128])

@@ -55,12 +55,6 @@ T_CExtPubKeyBase = TypeVar('T_CExtPubKeyBase', bound='CExtPubKeyBase')
 T_unbounded = TypeVar('T_unbounded')
 
 
-class _flag_NO_MERKLE_ROOT_TWEAK:
-    ...
-
-
-NO_MERKLE_ROOT_TWEAK = _flag_NO_MERKLE_ROOT_TWEAK()
-
 _openssl_library_handle: Optional[ctypes.CDLL] = None
 
 
@@ -307,10 +301,17 @@ class CKeyBase:
 
         return output.raw, recid.value
 
-    def sign_schnorr(
+    def sign_schnorr_no_tweak(
         self, hash: Union[bytes, bytearray],
         *,
-        merkle_root: Union[bytes, _flag_NO_MERKLE_ROOT_TWEAK] = b'',
+        aux: Optional[bytes] = None
+    ) -> bytes:
+        return self._sign_schnorr_internal(hash, aux=aux)
+
+    def _sign_schnorr_internal(
+        self, hash: Union[bytes, bytearray],
+        *,
+        merkle_root: Optional[bytes] = None,
         aux: Optional[bytes] = None
     ) -> bytes:
 
@@ -340,11 +341,8 @@ class CKeyBase:
 
         pubkey_buf = ctypes.create_string_buffer(64)
 
-        if merkle_root is not NO_MERKLE_ROOT_TWEAK:
-            if not isinstance(merkle_root, bytes):
-                raise TypeError(
-                    'merkle_root must be a bytes instance, '
-                    'or the special value NO_MERKLE_ROOT_TWEAK')
+        if merkle_root is not None:
+            ensure_isinstance(merkle_root, (bytes, bytearray), 'merkle_root')
 
             result = _secp256k1.secp256k1_keypair_xonly_pub(
                 secp256k1_context_sign, pubkey_buf, None, keypair_buf)
