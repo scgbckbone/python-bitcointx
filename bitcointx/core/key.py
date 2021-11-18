@@ -34,8 +34,7 @@ from typing import (
 
 import bitcointx.core
 from bitcointx.util import (
-    no_bool_use_as_property, ensure_isinstance, _openssl_library_path,
-    tagged_hasher
+    no_bool_use_as_property, ensure_isinstance, _openssl_library_path
 )
 from bitcointx.core.secp256k1 import (
     _secp256k1, secp256k1_context_sign, secp256k1_context_verify,
@@ -171,9 +170,6 @@ def _raw_sig_has_low_r(raw_sig: bytes) -> bool:
     # that our highest bit is always 0, and thus we must check that the
     # first byte is less than 0x80.
     return compact_sig.raw[0] < 0x80
-
-
-_taptweak_hasher = tagged_hasher(b'TapTweak')
 
 
 class CKeyBase:
@@ -2139,12 +2135,13 @@ class XOnlyPubKey(bytes):
         ensure_isinstance(merkle_root, bytes, 'merkle_root')
 
         if not merkle_root:
-            return _taptweak_hasher(self)
+            return bitcointx.core.CoreCoinParams.taptweak_hasher(self)
 
         if len(merkle_root) != 32:
             raise ValueError('non-empty merkle_root must be 32 bytes long')
 
-        return _taptweak_hasher(self + merkle_root)
+        return bitcointx.core.CoreCoinParams.taptweak_hasher(
+            self + merkle_root)
 
     def check_tap_tweak(self, internal_pub: 'XOnlyPubKey',
                         *,

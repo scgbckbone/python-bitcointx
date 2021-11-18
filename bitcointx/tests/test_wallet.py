@@ -31,10 +31,10 @@ from bitcointx import (
 from bitcointx.util import dispatcher_mapped_list
 from bitcointx.core import (
     b2x, x, Hash160, CTransaction, CMutableTransaction, CTxOut,
-    CMutableTxInWitness
+    CMutableTxInWitness, CoreCoinParams
 )
 from bitcointx.core.script import (
-    CScript, IsLowDERSignature, TaprootScriptTree, TAPROOT_LEAF_TAPSCRIPT,
+    CScript, IsLowDERSignature, TaprootScriptTree,
     SignatureHashSchnorr, CScriptWitness, SIGHASH_Type,
     TaprootScriptTreeLeaf_Type
 )
@@ -675,7 +675,7 @@ class Test_BIP341_standard_vectors(unittest.TestCase):
                             sname = f'id_{ld["id"]}'
                             leaf = CScript(x(ld['script']), name=sname)
                             scripts[sname] = leaf
-                            if ld["leafVersion"] != TAPROOT_LEAF_TAPSCRIPT:
+                            if ld["leafVersion"] != CoreCoinParams.TAPROOT_LEAF_TAPSCRIPT:
                                 leaf = TaprootScriptTree(
                                     [leaf], leaf_version=ld["leafVersion"])
                         else:

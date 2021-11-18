@@ -37,12 +37,8 @@ from .serialize import (
 
 from ..util import (
     no_bool_use_as_property, ClassMappingDispatcher, activate_class_dispatcher,
-    ensure_isinstance, tagged_hasher
+    ensure_isinstance
 )
-
-tapleaf_hasher = tagged_hasher(b'TapLeaf')
-tapbranch_hasher = tagged_hasher(b'TapBranch')
-tap_sighash_hasher = tagged_hasher(b'TapSighash')
 
 _conventional_leaf_versions = \
     tuple(range(0xc0, 0x100, 2)) + \
@@ -52,8 +48,6 @@ MAX_SCRIPT_SIZE = 10000
 MAX_SCRIPT_ELEMENT_SIZE = 520
 MAX_STANDARD_P2WSH_SCRIPT_SIZE = 3600
 MAX_SCRIPT_OPCODES = 201
-
-TAPROOT_LEAF_TAPSCRIPT = 0xc0
 
 # CScriptOp is a subclass of int, and CPubKey is a subclass of bytes,
 # but is incuded here for documentaion purposes - what we expect in a script.
@@ -1160,8 +1154,8 @@ class CScript(bytes, ScriptCoinClass, next_dispatch_final=True):
                         ) -> bytes:
 
         # Only BIP342 tapscript signing is supported for now.
-        leaf_version = TAPROOT_LEAF_TAPSCRIPT
-        tapleaf_hash = tapleaf_hasher(
+        leaf_version = bitcointx.core.CoreCoinParams.TAPROOT_LEAF_TAPSCRIPT
+        tapleaf_hash = bitcointx.core.CoreCoinParams.tapleaf_hasher(
             bytes([leaf_version]) + BytesSerializer.serialize(self)
         )
 
@@ -1562,7 +1556,7 @@ def SignatureHashSchnorr(
         f.write(bytes([key_version]))
         f.write(struct.pack("<i", codeseparator_pos))
 
-    return tap_sighash_hasher(f.getvalue())
+    return bitcointx.core.CoreCoinParams.tap_sighash_hasher(f.getvalue())
 
 
 class CBitcoinScript(CScript, ScriptBitcoinClass):
@@ -1899,7 +1893,7 @@ T_TaprootScriptTree = TypeVar('T_TaprootScriptTree', bound='TaprootScriptTree')
 TaprootScriptTreeLeaf_Type = Union[CScript, 'TaprootScriptTree']
 
 
-class TaprootScriptTree:
+class TaprootScriptTree(ScriptCoinClass, next_dispatch_final=True):
     """
     Represents the script tree for taproot script spending.
 
@@ -1964,7 +1958,7 @@ class TaprootScriptTree:
                 'treated as an error')
 
         if leaf_version is None:
-            leaf_version = TAPROOT_LEAF_TAPSCRIPT
+            leaf_version = bitcointx.core.CoreCoinParams.TAPROOT_LEAF_TAPSCRIPT
         else:
             if not any(isinstance(leaf, CScript) for leaf in leaves):
                 raise ValueError(
@@ -2102,8 +2096,9 @@ class TaprootScriptTree:
         if len(leaves) == 1:
             leaf = leaves[0]
             if isinstance(leaf, CScript):
-                leaf_hash = tapleaf_hasher(bytes([self.leaf_version]) +
-                                           BytesSerializer.serialize(leaf))
+                leaf_hash = bitcointx.core.CoreCoinParams.tapleaf_hasher(
+                    bytes([self.leaf_version])
+                    + BytesSerializer.serialize(leaf))
                 return (
                     leaf_hash,
                     lambda parent_path: [(b'', ) + parent_path]
@@ -2144,12 +2139,18 @@ class TaprootScriptTree:
             rp = right_collector((left_h, ) + parent_path)
             return lp + rp
 
+        tbh = bitcointx.core.CoreCoinParams.tapbranch_hasher
+
         if right_h < left_h:
-            branch_hash = tapbranch_hasher(right_h + left_h)
+            branch_hash = tbh(right_h + left_h)
         else:
-            branch_hash = tapbranch_hasher(left_h + right_h)
+            branch_hash = tbh(left_h + right_h)
 
         return (branch_hash, collector)
+
+
+class TaprootBitcoinScriptTree(TaprootScriptTree, ScriptBitcoinClass):
+    ...
 
 
 # default dispatcher for the module
