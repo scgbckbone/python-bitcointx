@@ -29,7 +29,7 @@ from bitcointx.core import (
     coins_to_satoshi, x, ValidationError,
     CTxOut, CTxIn, CTransaction, COutPoint, CTxWitness, CTxInWitness
 )
-from bitcointx.core.key import CKey
+from bitcointx.core.key import CKey, tap_tweak_pubkey
 from bitcointx.core.script import (
     OPCODES_BY_NAME, CScript, CScriptWitness,
     OP_0, SIGHASH_ALL, SIGVERSION_BASE, SIGVERSION_WITNESS_V0, OP_CHECKSIG,
@@ -51,7 +51,6 @@ TestDataIterator = Iterator[
           Optional[Sequence[CTxOut]], Set[ScriptVerifyFlag_Type],
           str, str, str]
 ]
-
 
 
 def parse_script(s: str) -> CScript:
@@ -184,7 +183,7 @@ class Test_EvalScript(unittest.TestCase):
 
         random_tweak = os.urandom(32)
 
-        tt_res = xopub.create_tap_tweak(merkle_root=random_tweak)
+        tt_res = tap_tweak_pubkey(xopub, merkle_root=random_tweak)
         assert tt_res is not None
         rnd_twpub, _ = tt_res
 
@@ -212,7 +211,7 @@ class Test_EvalScript(unittest.TestCase):
             tweaks = {}
             for leaf_idx in range(num_leaves):
                 tw = os.urandom(32)
-                tt_res = xopub.create_tap_tweak(merkle_root=tw)
+                tt_res = tap_tweak_pubkey(xopub, merkle_root=tw)
                 assert tt_res is not None
                 twpub, _ = tt_res
                 sname = f'{prefix}leaf_{leaf_idx}'

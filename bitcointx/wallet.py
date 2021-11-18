@@ -31,7 +31,8 @@ from bitcointx.util import (
     ensure_isinstance
 )
 from bitcointx.core.key import (
-    CPubKey, CKeyBase, CExtKeyBase, CExtPubKeyBase, XOnlyPubKey
+    CPubKey, CKeyBase, CExtKeyBase, CExtPubKeyBase, XOnlyPubKey,
+    tap_tweak_pubkey
 )
 from bitcointx.core.script import (
     CScript, standard_keyhash_scriptpubkey, standard_scripthash_scriptpubkey,
@@ -531,7 +532,7 @@ class P2TRCoinAddress(CBech32CoinAddress, next_dispatch_final=True):
         if not pubkey.is_fullyvalid():
             raise P2TRCoinAddressError('invalid pubkey')
 
-        tt_res = pubkey.create_tap_tweak()
+        tt_res = tap_tweak_pubkey(pubkey)
 
         if not tt_res:
             raise ValueError('cannot create tap tweak from supplied pubkey')

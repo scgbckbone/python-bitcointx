@@ -367,9 +367,9 @@ class CKeyBase:
                 assert(result == 0)
                 raise RuntimeError('secp256k1_xonly_pubkey_serialize returned failure')
 
-            tweak = XOnlyPubKey(
-                serialized_pubkey_buf.raw
-            ).compute_tap_tweak_hash(merkle_root=merkle_root)
+            tweak = compute_tap_tweak_hash(
+                XOnlyPubKey(serialized_pubkey_buf.raw),
+                merkle_root=merkle_root)
 
             result = _secp256k1.secp256k1_keypair_xonly_tweak_add(
                 secp256k1_context_sign, keypair_buf, tweak)
@@ -2129,76 +2129,6 @@ class XOnlyPubKey(bytes):
 
         return True
 
-    def compute_tap_tweak_hash(
-        self, *, merkle_root: bytes = b''
-    ) -> bytes:
-        ensure_isinstance(merkle_root, bytes, 'merkle_root')
-
-        if not merkle_root:
-            return bitcointx.core.CoreCoinParams.taptweak_hasher(self)
-
-        if len(merkle_root) != 32:
-            raise ValueError('non-empty merkle_root must be 32 bytes long')
-
-        return bitcointx.core.CoreCoinParams.taptweak_hasher(
-            self + merkle_root)
-
-    def check_tap_tweak(self, internal_pub: 'XOnlyPubKey',
-                        *,
-                        merkle_root: bytes = b'',
-                        parity: bool) -> bool:
-
-        tweak = internal_pub.compute_tap_tweak_hash(merkle_root=merkle_root)
-
-        result = _secp256k1.secp256k1_xonly_pubkey_tweak_add_check(
-            secp256k1_context_verify, self, int(bool(parity)),
-            internal_pub._to_ctypes_char_array(), tweak)
-
-        if result != 1:
-            assert result == 0
-            return False
-
-        return True
-
-    def create_tap_tweak(self: T_XOnlyPubKey, *,
-                         merkle_root: bytes = b'',
-                         ) -> Optional[Tuple[T_XOnlyPubKey, bool]]:
-
-        base_point = self._to_ctypes_char_array()
-        tweak = self.compute_tap_tweak_hash(merkle_root=merkle_root)
-        out = ctypes.create_string_buffer(64)
-
-        result = _secp256k1.secp256k1_xonly_pubkey_tweak_add(
-            secp256k1_context_verify, out, base_point, tweak)
-
-        if result != 1:
-            assert result == 0
-            return None
-
-        out_xonly = ctypes.create_string_buffer(64)
-
-        parity_ret = ctypes.c_int()
-        parity_ret.value = -1
-
-        result = _secp256k1.secp256k1_xonly_pubkey_from_pubkey(
-            secp256k1_context_verify, out_xonly, ctypes.byref(parity_ret),
-            out)
-
-        if result != 1:
-            assert result == 0
-            return None
-
-        assert parity_ret.value in (0, 1)
-        parity = bool(parity_ret.value)
-
-        out_xonly_serialized = ctypes.create_string_buffer(32)
-
-        result = _secp256k1.secp256k1_xonly_pubkey_serialize(
-            secp256k1_context_verify, out_xonly_serialized, out_xonly)
-        assert result == 1
-
-        return self.__class__(out_xonly_serialized.raw), parity
-
     def _to_ctypes_char_array(self) -> 'ctypes.Array[ctypes.c_char]':
         assert self.is_fullyvalid()
         raw_pub = ctypes.create_string_buffer(64)
@@ -2208,6 +2138,82 @@ class XOnlyPubKey(bytes):
             assert(result == 0)
             raise RuntimeError('secp256k1_xonly_pubkey_parse returned failure')
         return raw_pub
+
+
+def compute_tap_tweak_hash(
+    pub: XOnlyPubKey, *, merkle_root: bytes = b''
+) -> bytes:
+    ensure_isinstance(merkle_root, bytes, 'merkle_root')
+
+    if not merkle_root:
+        return bitcointx.core.CoreCoinParams.taptweak_hasher(pub)
+
+    if len(merkle_root) != 32:
+        raise ValueError('non-empty merkle_root must be 32 bytes long')
+
+    return bitcointx.core.CoreCoinParams.taptweak_hasher(
+        pub + merkle_root)
+
+
+def check_tap_tweak(tweaked_pub: XOnlyPubKey, internal_pub: XOnlyPubKey,
+                    *,
+                    merkle_root: bytes = b'',
+                    parity: bool) -> bool:
+
+    tweak = compute_tap_tweak_hash(internal_pub, merkle_root=merkle_root)
+
+    result = _secp256k1.secp256k1_xonly_pubkey_tweak_add_check(
+        secp256k1_context_verify, tweaked_pub, int(bool(parity)),
+        internal_pub._to_ctypes_char_array(), tweak)
+
+    if result != 1:
+        assert result == 0
+        return False
+
+    return True
+
+
+# in BitcoinCore, the same function is called `CreateTapTweak`. But
+# in this case it makes sense to deviate from followin Core's naming
+# conventions, because `create_tap_tweak` could be perceived as something
+# that creates tweak hash, rather than tweaks the pubkey.
+def tap_tweak_pubkey(pub: XOnlyPubKey, *, merkle_root: bytes = b'',
+                     ) -> Optional[Tuple[XOnlyPubKey, bool]]:
+
+    base_point = pub._to_ctypes_char_array()
+    tweak = compute_tap_tweak_hash(pub, merkle_root=merkle_root)
+    out = ctypes.create_string_buffer(64)
+
+    result = _secp256k1.secp256k1_xonly_pubkey_tweak_add(
+        secp256k1_context_verify, out, base_point, tweak)
+
+    if result != 1:
+        assert result == 0
+        return None
+
+    out_xonly = ctypes.create_string_buffer(64)
+
+    parity_ret = ctypes.c_int()
+    parity_ret.value = -1
+
+    result = _secp256k1.secp256k1_xonly_pubkey_from_pubkey(
+        secp256k1_context_verify, out_xonly, ctypes.byref(parity_ret),
+        out)
+
+    if result != 1:
+        assert result == 0
+        return None
+
+    assert parity_ret.value in (0, 1)
+    parity = bool(parity_ret.value)
+
+    out_xonly_serialized = ctypes.create_string_buffer(32)
+
+    result = _secp256k1.secp256k1_xonly_pubkey_serialize(
+        secp256k1_context_verify, out_xonly_serialized, out_xonly)
+    assert result == 1
+
+    return XOnlyPubKey(out_xonly_serialized.raw), parity
 
 
 __all__ = (

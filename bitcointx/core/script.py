@@ -2010,8 +2010,8 @@ class TaprootScriptTree(ScriptCoinClass, next_dispatch_final=True):
         self.parity = None
 
         if internal_pubkey:
-            tt_res = internal_pubkey.create_tap_tweak(
-                merkle_root=self.merkle_root)
+            tt_res = bitcointx.core.key.tap_tweak_pubkey(
+                internal_pubkey, merkle_root=self.merkle_root)
 
             if not tt_res:
                 raise ValueError(

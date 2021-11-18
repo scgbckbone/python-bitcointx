@@ -38,7 +38,9 @@ from bitcointx.core.script import (
     SignatureHashSchnorr, CScriptWitness, SIGHASH_Type,
     TaprootScriptTreeLeaf_Type
 )
-from bitcointx.core.key import CPubKey, XOnlyPubKey, CKey
+from bitcointx.core.key import (
+    CPubKey, XOnlyPubKey, CKey, compute_tap_tweak_hash
+)
 from bitcointx.wallet import (
     CCoinAddressError as CBitcoinAddressError,
     CCoinAddress,
@@ -697,7 +699,7 @@ class Test_BIP341_standard_vectors(unittest.TestCase):
             if intermediary['merkleRoot']:
                 self.assertEqual(merkle_root.hex(), intermediary['merkleRoot'])
 
-            tweak = int_pub.compute_tap_tweak_hash(merkle_root=merkle_root)
+            tweak = compute_tap_tweak_hash(int_pub, merkle_root=merkle_root)
 
             self.assertEqual(tweak.hex(), intermediary['tweak'])
             self.assertEqual(adr.hex(), intermediary['tweakedPubkey'])
@@ -749,7 +751,7 @@ class Test_BIP341_standard_vectors(unittest.TestCase):
                 else:
                     mr = b''
 
-                tweak = k.xonly_pub.compute_tap_tweak_hash(merkle_root=mr)
+                tweak = compute_tap_tweak_hash(k.xonly_pub, merkle_root=mr)
                 self.assertEqual(tweak.hex(), intermediary['tweak'])
 
                 # No check for intermediary['tweakedPrivkey'],
