@@ -2228,4 +2228,7 @@ __all__ = (
     'KeyDerivationInfo',
     'KeyStore',
     'XOnlyPubKey',
+    'compute_tap_tweak_hash',
+    'check_tap_tweak',
+    'tap_tweak_pubkey',
 )
