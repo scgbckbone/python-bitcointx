@@ -306,6 +306,13 @@ class CKeyBase:
         *,
         aux: Optional[bytes] = None
     ) -> bytes:
+        """
+        Produce Schnorr signature of the supplied `hash` with this key.
+        No tweak is applied to the key before signing.
+        This is mostly useful when the signature is going to be checked
+        within the script by CHECKSIG-related opcodes, or for other generic
+        Schnorr signing needs
+        """
         return self._sign_schnorr_internal(hash, aux=aux)
 
     def _sign_schnorr_internal(
@@ -314,6 +321,24 @@ class CKeyBase:
         merkle_root: Optional[bytes] = None,
         aux: Optional[bytes] = None
     ) -> bytes:
+        """
+        Internal function to produce Schnorr signature.
+        It is not supposed to be called by the external code.
+
+        Note on merkle_root argument: values of None, b'' and <32 bytes>
+        all have different meaning.
+           - None means no tweak is applied to the key before signing.
+             This is mostly useful when the signature is going to be checked
+             within the script by CHECKSIG-related opcodes, or for other
+             generic Schnorr signing needs
+           - b'' means that the tweak will be applied, with merkle_root
+             being generated as the tagged hash of the x-only pubkey
+             corresponding to this private key. This is mostly useful
+             when signing keypath spends when there is no script path
+           - <32 bytes> are used directly as a tweak. This is mostly useful
+             when signing keypath spends when there is also a script path
+             present
+        """
 
         ensure_isinstance(hash, (bytes, bytearray), 'hash')
         if len(hash) != 32:
@@ -2136,6 +2161,12 @@ class XOnlyPubKey(bytes):
             assert(result == 0)
             raise RuntimeError('secp256k1_xonly_pubkey_parse returned failure')
         return raw_pub
+
+    def __str__(self) -> str:
+        return repr(self)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(x('{bitcointx.core.b2x(self)}'))"
 
 
 def compute_tap_tweak_hash(

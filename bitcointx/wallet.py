@@ -520,7 +520,10 @@ class P2TRCoinAddress(CBech32CoinAddress, next_dispatch_final=True):
         cls: Type[T_P2TRCoinAddress],
         pubkey: Union[XOnlyPubKey, bytes, bytearray]
     ) -> T_P2TRCoinAddress:
-        """Create a P2TR address from x-only "internal" pubkey (in BIP341 terms)
+        """Create a P2TR address from x-only "internal" pubkey (in BIP341 terms).
+        The pubkey will be tweaked with the tagged hash of itself, to make
+        the output pubkey commit to an unspendable script path, as recommended
+        by BIP341 (see note 22 in BIP341).
 
         Raises CCoinAddressError if pubkey is invalid
         """
@@ -833,6 +836,17 @@ class CCoinKey(CBase58DataDispatched, CKeyBase,
         merkle_root: bytes = b'',
         aux: Optional[bytes] = None
     ) -> bytes:
+        """Schnorr-sign with the key that is tweaked before signing.
+
+        When merkle_root is empty bytes, the tweak will be generated
+        as a tagged hash of the x-only pubkey that corresponds to this
+        private key. Supplying empty-bytes merkle_root (the default) is
+        mostly useful when signing keypath spends when there is no script path.
+
+        When merkle_root is 32 bytes, it will be directly used as a tweak.
+        This is mostly useful when signing keypath spends when there is also
+        a script path present
+        """
         return self._sign_schnorr_internal(
             hash, merkle_root=merkle_root, aux=aux)
 

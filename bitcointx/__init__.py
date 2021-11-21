@@ -317,7 +317,7 @@ def allow_secp256k1_experimental_modules() -> None:
     functions depend on these function definitions in python-bitcointx code
     to be in-sync with the actual C language definitions in the library when
     it was compiled. Libsecp256k1 ABI is mostly stable, but still has no
-    officially released version at the moment. But for scnorr signatures
+    officially released version at the moment. But for schnorr signatures
     and x-only pubkeys, we have to use the modules of libsecp256k1 that are
     currently marked as 'experimental'. These modules being experimental
     mean that their ABI can change at any moment. Therefore, to use

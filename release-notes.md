@@ -15,7 +15,7 @@ Added Taproot support:
     * `XOnlyPukey` class in bitcointx.core.key
     * `CKey` now has `xonly_pub` field and `sign_schnorr()`, `verify_schnorr()` methods
     * `CPubKey` now has `verify_schnorr()` and `is_null()` methods
-    * `SignatureHashShnorr()` function to compute sighash for schnorr when no script is present
+    * `SignatureHashSchnorr()` function to compute sighash for schnorr when no script is present
 
 
 Removed bitcointx.core.serialize.VarBytesSerializer - it was a duplicate of BytesSerializer
