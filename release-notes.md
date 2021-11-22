@@ -13,7 +13,8 @@ Added Taproot support:
     * `CScript` now have `name` field and `is_witness_v1_taproot()`, `sighash_schnorr()` methods
     * `TaprootScriptTree` class in bitcointx.core.script
     * `XOnlyPukey` class in bitcointx.core.key
-    * `CKey` now has `xonly_pub` field and `sign_schnorr()`, `verify_schnorr()` methods
+    * `CKey` now has `xonly_pub` field and `sign_schnorr_no_tweak()`, `verify_schnorr()` methods
+    * `CCoinKey` now has `sign_schnorr_tweaked()` method (in addition to all `CKey` methods, of course)
     * `CPubKey` now has `verify_schnorr()` and `is_null()` methods
     * `SignatureHashSchnorr()` function to compute sighash for schnorr when no script is present
 
