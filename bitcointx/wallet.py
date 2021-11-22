@@ -681,7 +681,7 @@ class CBech32BitcoinTestnetAddress(CBech32CoinAddress,
 
 class CBech32BitcoinSignetAddress(CBech32CoinAddress,
                                   CBitcoinSignetAddress):
-    bech32_hrp = 'sb'
+    bech32_hrp = 'tb'
 
 
 class CBech32BitcoinRegtestAddress(CBech32CoinAddress,
@@ -714,7 +714,7 @@ class P2PKHBitcoinRegtestAddress(P2PKHCoinAddress,
 
 class P2PKHBitcoinSignetAddress(P2PKHCoinAddress,
                                 CBase58BitcoinSignetAddress):
-    base58_prefix = bytes([125])
+    base58_prefix = bytes([111])
 
 
 class P2SHBitcoinRegtestAddress(P2SHCoinAddress,
@@ -724,7 +724,7 @@ class P2SHBitcoinRegtestAddress(P2SHCoinAddress,
 
 class P2SHBitcoinSignetAddress(P2SHCoinAddress,
                                CBase58BitcoinSignetAddress):
-    base58_prefix = bytes([87])
+    base58_prefix = bytes([196])
 
 
 class P2WSHBitcoinAddress(P2WSHCoinAddress, CBech32BitcoinAddress):
@@ -869,7 +869,7 @@ class CBitcoinRegtestKey(CCoinKey, WalletBitcoinRegtestClass):
 
 
 class CBitcoinSignetKey(CCoinKey, WalletBitcoinSignetClass):
-    base58_prefix = bytes([217])
+    base58_prefix = bytes([239])
 
 
 class CCoinExtPubKey(CBase58DataDispatched, CExtPubKeyBase,
