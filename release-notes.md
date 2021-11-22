@@ -7,7 +7,6 @@ Added Taproot support:
       PYTHON_BITCOINTX_ALLOW_LIBSECP256K1_EXPERIMENTAL_MODULES_USE=1 environment variable,
       and appropriate libsecp256k1 version supplied with `set_custom_secp256k1_path()` or
       LD_LIBRARY_PATH environment variable.
-      Recommended commit for libsecp256k1: 7006f1b97fd8dbf4ef75771dd7c15185811c3f50
     * `P2TRCoinAddress`, `P2TRBitcoinAddress` classes (+ testnet, regtest, signet P2TR addr classes)
       in bitcointx.wallet
     * `CScript` now have `name` field and `is_witness_v1_taproot()`, `sighash_schnorr()` methods
@@ -18,6 +17,8 @@ Added Taproot support:
     * `CPubKey` now has `verify_schnorr()` and `is_null()` methods
     * `SignatureHashSchnorr()` function to compute sighash for schnorr when no script is present
 
+Define 'recommended commit' for libsecp256k1, list it in README.md and make automatic tests extract
+that commit hash from README.md and complie that exact version of libsecp256k1 for tests
 
 Removed bitcointx.core.serialize.VarBytesSerializer - it was a duplicate of BytesSerializer
 
